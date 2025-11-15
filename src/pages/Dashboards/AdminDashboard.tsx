@@ -98,7 +98,7 @@ export default function AdminDashboard() {
                 Total Pending
               </p>
               <p className="text-2xl font-bold text-slate-800">
-                {pending.length}
+                {pending?.length}
               </p>
             </div>
             <div className="p-3 bg-yellow-100 rounded-lg">
@@ -160,7 +160,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="p-6">
-          {pending.length === 0 ? (
+          {pending?.length === 0 ? (
             <div className="text-center py-12">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
                 <UserCheck className="w-8 h-8 text-green-600" />
@@ -174,59 +174,61 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <div className="space-y-4">
-              {pending.map((u) => (
-                <div
-                  key={u.id}
-                  className="border border-slate-200 rounded-lg p-6 hover:shadow-md transition-shadow bg-slate-50"
-                >
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Users className="w-5 h-5 text-blue-600" />
+              {pending &&
+                pending?.map((u) => (
+                  <div
+                    key={u.id}
+                    className="border border-slate-200 rounded-lg p-6 hover:shadow-md transition-shadow bg-slate-50"
+                  >
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <Users className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-slate-800">
+                              {u.first_name} {u.last_name}
+                            </h3>
+                            <p className="text-sm text-slate-600">
+                              @{u.username}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-slate-800">
-                            {u.first_name} {u.last_name}
-                          </h3>
+                        <div className="ml-13 space-y-1">
                           <p className="text-sm text-slate-600">
-                            @{u.username}
+                            <span className="font-medium">Role:</span> {u.role}
+                          </p>
+                          <p className="text-sm text-slate-600">
+                            <span className="font-medium">Email:</span>{" "}
+                            {u.email}
+                          </p>
+                          <p className="text-sm text-slate-600">
+                            <span className="font-medium">Employee #:</span>{" "}
+                            {u.employee_number}
                           </p>
                         </div>
                       </div>
-                      <div className="ml-13 space-y-1">
-                        <p className="text-sm text-slate-600">
-                          <span className="font-medium">Role:</span> {u.role}
-                        </p>
-                        <p className="text-sm text-slate-600">
-                          <span className="font-medium">Email:</span> {u.email}
-                        </p>
-                        <p className="text-sm text-slate-600">
-                          <span className="font-medium">Employee #:</span>{" "}
-                          {u.employee_number}
-                        </p>
+
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <button
+                          onClick={() => handleDecision(u.id, "approve")}
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors shadow-sm"
+                        >
+                          <ThumbsUp className="w-4 h-4" />
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleDecision(u.id, "reject")}
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors shadow-sm"
+                        >
+                          <ThumbsDown className="w-4 h-4" />
+                          Reject
+                        </button>
                       </div>
                     </div>
-
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <button
-                        onClick={() => handleDecision(u.id, "approve")}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors shadow-sm"
-                      >
-                        <ThumbsUp className="w-4 h-4" />
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => handleDecision(u.id, "reject")}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors shadow-sm"
-                      >
-                        <ThumbsDown className="w-4 h-4" />
-                        Reject
-                      </button>
-                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
         </div>

@@ -6,7 +6,12 @@ import { Toaster } from "react-hot-toast";
 
 const LoginPage = lazy(() => import("./pages/auth/Login"));
 const RegisterPage = lazy(() => import("./pages/auth/Register"));
+
+// Admin related
 const AdminDashboard = lazy(() => import("./pages/Dashboards/AdminDashboard"));
+const UserManagementpage = lazy(
+  () => import("./pages/UserManagement/UserManagementpage")
+);
 
 const ManagerDashboard = lazy(
   () => import("./pages/Dashboards/ManagerDashboard")
@@ -14,6 +19,7 @@ const ManagerDashboard = lazy(
 const MemberDashboard = lazy(
   () => import("./pages/Dashboards/MemberDashboard")
 );
+
 const WorkingOnPage = lazy(() => import("./pages/WorkingOnPage"));
 function App() {
   return (
@@ -24,12 +30,23 @@ function App() {
           <Routes>
             <Route path="/" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            {/* Admin Related Routes */}
             <Route
               path="/Admin-Dashboard"
               element={
                 <RoleProtectedRoute allowedRoles={["Admin"]}>
                   <SidebarLayout>
                     <AdminDashboard />
+                  </SidebarLayout>
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                <RoleProtectedRoute allowedRoles={["Admin"]}>
+                  <SidebarLayout>
+                    <UserManagementpage />
                   </SidebarLayout>
                 </RoleProtectedRoute>
               }

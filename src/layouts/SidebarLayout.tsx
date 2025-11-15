@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import Sidebar from "../components/Sidebar";
 import { Bell, User } from "lucide-react";
 
@@ -7,19 +7,13 @@ type Props = {
 };
 
 export default function SidebarLayout({ children }: Props) {
-  const [collapsed, setCollapsed] = useState(false);
-
-  console.log("using Sidebar Layout");
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar (left) */}
-      <Sidebar
-        collapsed={collapsed}
-        onToggle={() => setCollapsed(!collapsed)}
-      />
+      <Sidebar />
 
       {/* Main Content (right) */}
-      <div className="w-full">
+      <div className="w-full ml-[50px] md:ml-0">
         {/* header with notifications */}
         <div className="flex border-b border-slate-200 w-full h-16 justify-between items-center px-6 py-2 bg-white shadow-sm">
           <div className="flex items-center">
@@ -36,7 +30,7 @@ export default function SidebarLayout({ children }: Props) {
             </button>
           </div>
         </div>
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-1 sm:p-2 md:p-4 lg:p-6">{children}</main>
       </div>
     </div>
   );
