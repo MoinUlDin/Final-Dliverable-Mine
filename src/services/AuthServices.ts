@@ -5,7 +5,7 @@ const API_BASE_URL = "http://localhost:8000/api"; // Adjust to your DRF backend 
 class AuthServices {
   static async login(credentials: any) {
     try {
-      const response = await api.post(`/tasks/auth/login/`, credentials);
+      const response = await api.post(`/auth/login/`, credentials);
       const { access, refresh, user_info } = response.data;
       localStorage.setItem("access_token", access);
       localStorage.setItem("refresh_token", refresh);
@@ -33,7 +33,7 @@ class AuthServices {
         }
       });
 
-      const response = await api.post(`/tasks/auth/register/`, formData, {
+      const response = await api.post(`/auth/register/`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       return response.data;
@@ -44,15 +44,9 @@ class AuthServices {
   }
 
   static async logout() {
-    try {
-      await axios.post(`/auth/logout/`);
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-      localStorage.removeItem("user");
-    }
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user");
   }
 
   static async refreshToken() {

@@ -46,7 +46,7 @@ const LINKS: SidebarLink[] = [
     to: "/tasks",
     label: "Tasks",
     Icon: ClipboardList,
-    allowedRoles: ["Manager"],
+    allowedRoles: ["Admin", "Manager"],
   },
   {
     to: "/my-tasks",

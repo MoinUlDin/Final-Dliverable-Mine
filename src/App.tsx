@@ -1,3 +1,4 @@
+// Final Deliverable BC200414690
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { lazy } from "react";
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
@@ -13,12 +14,18 @@ const UserManagementpage = lazy(
   () => import("./pages/UserManagement/UserManagementpage")
 );
 
+// Member Related
+const MemberTaskPage = lazy(() => import("./pages/Tasks/MemberTaskPage"));
+
 const ManagerDashboard = lazy(
   () => import("./pages/Dashboards/ManagerDashboard")
 );
 const MemberDashboard = lazy(
   () => import("./pages/Dashboards/MemberDashboard")
 );
+
+// Admin--Managers
+const TaskManagerPage = lazy(() => import("./pages/Tasks/TaskManagerPage"));
 
 const WorkingOnPage = lazy(() => import("./pages/WorkingOnPage"));
 function App() {
@@ -67,6 +74,26 @@ function App() {
                 <RoleProtectedRoute allowedRoles={["Member"]}>
                   <SidebarLayout>
                     <MemberDashboard />
+                  </SidebarLayout>
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/tasks"
+              element={
+                <RoleProtectedRoute allowedRoles={["Admin", "Manager"]}>
+                  <SidebarLayout>
+                    <TaskManagerPage />
+                  </SidebarLayout>
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-tasks"
+              element={
+                <RoleProtectedRoute allowedRoles={["Member"]}>
+                  <SidebarLayout>
+                    <MemberTaskPage />
                   </SidebarLayout>
                 </RoleProtectedRoute>
               }
