@@ -154,6 +154,15 @@ export default class TaskServices {
       throw error.response?.data;
     }
   }
+  static async DeleteFile(id: string) {
+    try {
+      const response = await api.delete(`/tasks/remove-file/${id}`);
+      return response.data;
+    } catch (error: any) {
+      console.log(`Error Deleting Task ${id}`, error);
+      throw error.response?.data;
+    }
+  }
 
   /**
    * POST /tasks/{id}/assign/
