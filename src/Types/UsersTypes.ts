@@ -3,6 +3,7 @@ export interface UserCompactType {
   first_name: string;
   last_name: string;
   username: string;
+  employee_number: string;
   profile_picture: string;
   role: string;
   email: string;

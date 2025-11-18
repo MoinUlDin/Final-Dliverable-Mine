@@ -2,6 +2,7 @@ import { useEffect, useState, type JSX } from "react";
 import TaskServices from "../../services/TaskServices";
 import type { TasksType, AttachedFile } from "../../Types/TaskTypes";
 import type { UserCompactType } from "../../Types/UsersTypes";
+import CreateEditTask from "../../components/Popups.tsx/CreateEditTask";
 
 import {
   Plus,
@@ -20,7 +21,7 @@ export default function TaskManagerPage(): JSX.Element {
   const [tasks, setTasks] = useState<TasksType[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const [initialData, setInitialData] = useState<TasksType | null>(null);
   // modals / UI state
   const [showCreate, setShowCreate] = useState(false);
 
@@ -75,8 +76,14 @@ export default function TaskManagerPage(): JSX.Element {
 
   // Comments — using PartialUpdateTask sending { comment }
   const openComment = (t: TasksType) => {};
+  const hendleCreate = () => {
+    setInitialData(null);
+    setShowCreate(true);
+  };
   const handleEdit = (task: TasksType) => {
     console.log("editing Task: ", task);
+    setInitialData(task);
+    setShowCreate(true);
   };
   const handleAssign = (task: TasksType) => {
     console.log("Assigning Task: ", task);
@@ -150,7 +157,7 @@ export default function TaskManagerPage(): JSX.Element {
           </div>
           <div className="flex items-center gap-3 self-end">
             <button
-              onClick={() => setShowCreate(true)}
+              onClick={hendleCreate}
               className="text-xs lg:text-sm inline-flex items-center gap-2 md:gap-1 lg:gap-2 px-3 py-2 rounded-md bg-slate-900 text-white hover:bg-slate-800"
             >
               <Plus className="size-3 sm:size-4" />
@@ -386,6 +393,14 @@ export default function TaskManagerPage(): JSX.Element {
           )}
         </main>
       </div>
+
+      {showCreate && (
+        <CreateEditTask
+          onSuccess={fetchTasks}
+          initialData={initialData}
+          onClose={() => setShowCreate(false)}
+        />
+      )}
     </div>
   );
 }

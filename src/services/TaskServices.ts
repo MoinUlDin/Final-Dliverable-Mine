@@ -156,7 +156,7 @@ export default class TaskServices {
   }
   static async DeleteFile(id: string) {
     try {
-      const response = await api.delete(`/tasks/remove-file/${id}`);
+      const response = await api.delete(`/tasks/remove-file/${id}/`);
       return response.data;
     } catch (error: any) {
       console.log(`Error Deleting Task ${id}`, error);
@@ -237,6 +237,16 @@ export default class TaskServices {
   static async FetchMyTasks() {
     try {
       const response = await api.get(`/tasks/my-tasks/`);
+      return response.data;
+    } catch (error: any) {
+      console.log("Error Fetching My Tasks", error);
+      throw error.response?.data;
+    }
+  }
+  /** GET /tasks/my-tasks/ */
+  static async FetchMembers() {
+    try {
+      const response = await api.get(`/tasks/list-members/`);
       return response.data;
     } catch (error: any) {
       console.log("Error Fetching My Tasks", error);
