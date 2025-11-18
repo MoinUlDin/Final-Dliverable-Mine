@@ -136,7 +136,7 @@ function CreateEditTask({ onClose, onSuccess, initialData = null }: Props) {
         await TaskServices.UpdateTask(
           initialData.id,
           updatePayload,
-          files.length ? files : undefined,
+          /* no files on update per design */ undefined,
           selectedAssignees
         );
         toast.success("Task updated successfully");
@@ -166,283 +166,348 @@ function CreateEditTask({ onClose, onSuccess, initialData = null }: Props) {
         className="absolute inset-0 bg-black/40"
         onClick={() => (submitting ? null : onClose())}
       />
-      <form
-        onSubmit={handleSubmit}
-        className="relative w-full max-w-3xl bg-white rounded-2xl shadow-lg overflow-hidden"
-        aria-labelledby="task-modal-title"
-      >
-        <div className="flex items-center justify-between p-4 md:p-5 bg-gradient-to-r from-sky-400 to-emerald-300">
-          <div>
-            <h3
-              id="task-modal-title"
-              className="text-lg md:text-xl font-semibold text-slate-900"
-            >
-              {editing ? "Update Task" : "Create Task"}
-            </h3>
-            <p className="text-xs text-slate-800/80">
-              {editing
-                ? "Edit fields and save"
-                : "Fill required fields to create a task"}
-            </p>
-          </div>
-          <div>
-            <button
-              type="button"
-              onClick={() => (submitting ? null : onClose())}
-              className="p-2 rounded hover:bg-red-200"
-              aria-label="Close"
-            >
-              <X />
-            </button>
-          </div>
-        </div>
-
-        <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-3">
+      <div className="max-h-[99%] overflow-auto rounded-2xl">
+        <form
+          onSubmit={handleSubmit}
+          className="relative w-full max-w-3xl bg-white rounded-2xl shadow-lg "
+          aria-labelledby="task-modal-title"
+        >
+          <div className="flex items-center justify-between p-4 md:p-5 bg-gradient-to-r from-sky-400 to-emerald-300">
             <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Title *
-              </label>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className={`mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 ${
-                  errors.title
-                    ? "border-red-400 ring-red-100"
-                    : "border-slate-200 ring-sky-100"
-                }`}
-                placeholder="Enter task title"
-              />
-              {errors.title && (
-                <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
-                  <AlertTriangle size={14} /> {errors.title}
-                </p>
+              <h3
+                id="task-modal-title"
+                className="text-lg md:text-xl font-semibold text-slate-900"
+              >
+                {editing ? "Update Task" : "Create Task"}
+              </h3>
+              <p className="text-xs text-slate-800/80">
+                {editing
+                  ? "Edit fields and save"
+                  : "Fill required fields to create a task"}
+              </p>
+            </div>
+            <div>
+              <button
+                type="button"
+                onClick={() => (submitting ? null : onClose())}
+                className="p-2 rounded hover:bg-red-200"
+                aria-label="Close"
+              >
+                <X />
+              </button>
+            </div>
+          </div>
+
+          <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700">
+                  Title *
+                </label>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className={`mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 ${
+                    errors.title
+                      ? "border-red-400 ring-red-100"
+                      : "border-slate-200 ring-sky-100"
+                  }`}
+                  placeholder="Enter task title"
+                />
+                {errors.title && (
+                  <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                    <AlertTriangle size={14} /> {errors.title}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700">
+                  Description
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={5}
+                  className="mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 border-slate-200"
+                  placeholder="Optional longer description"
+                />
+              </div>
+
+              {!editing && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">
+                    Files
+                  </label>
+                  <div className="mt-1 flex items-center gap-3">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700">
+                      <input
+                        type="file"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => onFilesChange(e.target.files)}
+                      />
+                      <span className="inline-flex items-center gap-2 px-3 py-2 rounded border border-slate-200 hover:bg-sky-50">
+                        <Upload size={14} /> Attach files
+                      </span>
+                    </label>
+                    <div className="text-xs text-slate-500">
+                      {files.length
+                        ? `${files.length} file(s) selected`
+                        : "No files selected"}
+                    </div>
+                  </div>
+
+                  {files.length > 0 && (
+                    <ul className="mt-2 max-h-28 overflow-auto text-xs space-y-1">
+                      {files.map((f, i) => (
+                        <li
+                          key={i}
+                          className="flex items-center justify-between gap-2 bg-slate-50 px-2 py-1 rounded"
+                        >
+                          <span className="truncate">{f.name}</span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFiles((prev) =>
+                                prev.filter((_, idx) => idx !== i)
+                              )
+                            }
+                            className="text-xs text-red-600 px-2"
+                          >
+                            Remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Description
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={5}
-                className="mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 border-slate-200"
-                placeholder="Optional longer description"
-              />
-            </div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">
+                    Priority *
+                  </label>
+                  <select
+                    value={priority}
+                    onChange={(e) => setPriority(e.target.value)}
+                    className={`mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 ${
+                      errors.priority
+                        ? "border-red-400 ring-red-100"
+                        : "border-slate-200 ring-sky-100"
+                    }`}
+                  >
+                    {PRIORITY_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.priority && (
+                    <p className="mt-1 text-xs text-red-600">
+                      {errors.priority}
+                    </p>
+                  )}
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Files
-              </label>
-              <div className="mt-1 flex items-center gap-3">
-                <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700">
-                  <input
-                    type="file"
-                    multiple
-                    className="hidden"
-                    onChange={(e) => onFilesChange(e.target.files)}
-                  />
-                  <span className="inline-flex items-center gap-2 px-3 py-2 rounded border border-slate-200 hover:bg-sky-50">
-                    <Upload size={14} /> Attach files
-                  </span>
-                </label>
-                <div className="text-xs text-slate-500">
-                  {files.length
-                    ? `${files.length} file(s) selected`
-                    : "No files selected"}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">
+                    Status *
+                  </label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className={`mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 ${
+                      errors.status
+                        ? "border-red-400 ring-red-100"
+                        : "border-slate-200 ring-sky-100"
+                    }`}
+                  >
+                    {STATUS_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.status && (
+                    <p className="mt-1 text-xs text-red-600">{errors.status}</p>
+                  )}
                 </div>
               </div>
 
-              {files.length > 0 && (
-                <ul className="mt-2 max-h-28 overflow-auto text-xs space-y-1">
-                  {files.map((f, i) => (
-                    <li
-                      key={i}
-                      className="flex items-center justify-between gap-2 bg-slate-50 px-2 py-1 rounded"
-                    >
-                      <span className="truncate">{f.name}</span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setFiles((prev) => prev.filter((_, idx) => idx !== i))
-                        }
-                        className="text-xs text-red-600 px-2"
-                      >
-                        Remove
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+              {editing && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">
+                    Progress (%)
+                  </label>
+                  <input
+                    type="number"
+                    value={progress}
+                    onChange={(e) => setProgress(Number(e.target.value))}
+                    min={0}
+                    max={100}
+                    className={`mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 ${
+                      errors.progress
+                        ? "border-red-400 ring-red-100"
+                        : "border-slate-200 ring-sky-100"
+                    }`}
+                  />
+                  {errors.progress && (
+                    <p className="mt-1 text-xs text-red-600">
+                      {errors.progress}
+                    </p>
+                  )}
+                </div>
               )}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-slate-700">
-                  Priority *
-                </label>
-                <select
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value)}
-                  className={`mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 ${
-                    errors.priority
-                      ? "border-red-400 ring-red-100"
-                      : "border-slate-200 ring-sky-100"
-                  }`}
-                >
-                  {PRIORITY_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-                {errors.priority && (
-                  <p className="mt-1 text-xs text-red-600">{errors.priority}</p>
-                )}
-              </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700">
-                  Status *
-                </label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className={`mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 ${
-                    errors.status
-                      ? "border-red-400 ring-red-100"
-                      : "border-slate-200 ring-sky-100"
-                  }`}
-                >
-                  {STATUS_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-                {errors.status && (
-                  <p className="mt-1 text-xs text-red-600">{errors.status}</p>
-                )}
-              </div>
-            </div>
-
-            {editing && (
-              <div>
-                <label className="block text-sm font-medium text-slate-700">
-                  Progress (%)
+                  Due date *
                 </label>
                 <input
-                  type="number"
-                  value={progress}
-                  onChange={(e) => setProgress(Number(e.target.value))}
-                  min={0}
-                  max={100}
+                  type="datetime-local"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
                   className={`mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 ${
-                    errors.progress
+                    errors.due_date
                       ? "border-red-400 ring-red-100"
                       : "border-slate-200 ring-sky-100"
                   }`}
                 />
-                {errors.progress && (
-                  <p className="mt-1 text-xs text-red-600">{errors.progress}</p>
+                {errors.due_date && (
+                  <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                    <AlertTriangle size={14} /> {errors.due_date}
+                  </p>
                 )}
               </div>
-            )}
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Due date *
-              </label>
-              <input
-                type="datetime-local"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className={`mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 ${
-                  errors.due_date
-                    ? "border-red-400 ring-red-100"
-                    : "border-slate-200 ring-sky-100"
-                }`}
-              />
-              {errors.due_date && (
-                <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
-                  <AlertTriangle size={14} /> {errors.due_date}
-                </p>
+              {/* show assignees inside right column only when NOT editing */}
+              {!editing && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">
+                    Assignees (optional)
+                  </label>
+                  <div className="mt-1 border rounded-md p-2 max-h-40 overflow-auto bg-white">
+                    {loadingMembers ? (
+                      <div className="text-xs text-slate-500">
+                        Loading members…
+                      </div>
+                    ) : members.length === 0 ? (
+                      <div className="text-xs text-slate-500">
+                        No members found
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {members.map((m) => (
+                          <label
+                            key={m.id}
+                            className="flex items-center gap-2 text-sm p-1 rounded hover:bg-slate-50 cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedAssignees.includes(m.id)}
+                              onChange={() => toggleAssignee(m.id)}
+                              className="h-4 w-4"
+                            />
+                            <div className="flex flex-col">
+                              <span className="font-medium text-xs">
+                                @{m.username}
+                              </span>
+                              <span className="text-[11px] text-slate-400">
+                                {m.first_name} {m.last_name}
+                              </span>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500">
+                    You may leave this empty — or select multiple to assign this
+                    task.
+                  </p>
+                </div>
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Assignees (optional)
-              </label>
-              <div className="mt-1 border rounded-md p-2 max-h-40 overflow-auto bg-white">
-                {loadingMembers ? (
-                  <div className="text-xs text-slate-500">Loading members…</div>
-                ) : members.length === 0 ? (
-                  <div className="text-xs text-slate-500">No members found</div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {members.map((m) => (
-                      <label
-                        key={m.id}
-                        className="flex items-center gap-2 text-sm p-1 rounded hover:bg-slate-50 cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedAssignees.includes(m.id)}
-                          onChange={() => toggleAssignee(m.id)}
-                          className="h-4 w-4"
-                        />
-                        <div className="flex flex-col">
-                          <span className="font-medium text-xs">
-                            @{m.username}
-                          </span>
-                          <span className="text-[11px] text-slate-400">
-                            {m.first_name} {m.last_name}
-                          </span>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                )}
+            {/* When editing, render assignees as a full-width row so it takes the whole modal */}
+            {editing && (
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700">
+                  Assignees (optional)
+                </label>
+                <div className="mt-1 border rounded-md p-2 max-h-48 overflow-auto bg-white">
+                  {loadingMembers ? (
+                    <div className="text-xs text-slate-500">
+                      Loading members…
+                    </div>
+                  ) : members.length === 0 ? (
+                    <div className="text-xs text-slate-500">
+                      No members found
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {members.map((m) => (
+                        <label
+                          key={m.id}
+                          className="flex items-center gap-2 text-sm p-1 rounded hover:bg-slate-50 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedAssignees.includes(m.id)}
+                            onChange={() => toggleAssignee(m.id)}
+                            className="h-4 w-4"
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-medium text-xs">
+                              @{m.username}
+                            </span>
+                            <span className="text-[11px] text-slate-400">
+                              {m.first_name} {m.last_name}
+                            </span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-slate-500">
+                  You may leave this empty — or select multiple to assign this
+                  task.
+                </p>
               </div>
-              <p className="mt-1 text-xs text-slate-500">
-                You may leave this empty — admins can create tasks without
-                assigning anyone.
-              </p>
-            </div>
+            )}
           </div>
-        </div>
 
-        <div className="flex items-center justify-end gap-3 p-4 md:p-5 border-t border-slate-100">
-          <button
-            type="button"
-            onClick={() => (submitting ? null : onClose())}
-            className="px-3 py-2 rounded bg-white border text-sm"
-            disabled={submitting}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded bg-slate-900 text-white text-sm disabled:opacity-60"
-            disabled={submitting}
-          >
-            <Check />
-            {submitting
-              ? editing
-                ? "Saving..."
-                : "Creating..."
-              : editing
-              ? "Save"
-              : "Create"}
-          </button>
-        </div>
-      </form>
+          <div className="flex items-center justify-end gap-3 p-4 md:p-5 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => (submitting ? null : onClose())}
+              className="px-3 py-2 rounded bg-white border text-sm"
+              disabled={submitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded bg-slate-900 text-white text-sm disabled:opacity-60"
+              disabled={submitting}
+            >
+              <Check />
+              {submitting
+                ? editing
+                  ? "Saving..."
+                  : "Creating..."
+                : editing
+                ? "Save"
+                : "Create"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

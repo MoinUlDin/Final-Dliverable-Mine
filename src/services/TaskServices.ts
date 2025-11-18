@@ -186,10 +186,12 @@ export default class TaskServices {
    * Body: { progress: 50 }
    */
   static async UpdateProgress(id: number | string, progress: number) {
+    console.log("Sending progress: ", progress);
     try {
-      const response = await api.patch(`/tasks/${id}/update-progress/`, {
-        progress,
-      });
+      const response = await api.patch(
+        `/tasks/${id}/update-progress/`,
+        progress
+      );
       return response.data;
     } catch (error: any) {
       console.log(`Error Updating Progress for Task ${id}`, error);

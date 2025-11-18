@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
 import TaskServices from "../../services/TaskServices";
 import toast from "react-hot-toast";
-import { CheckCircle, CloudDownload } from "lucide-react";
-import type { MembersTasks, Assignees } from "../../Types/TaskTypes";
+import {
+  CheckCheck,
+  CheckCircle,
+  CheckSquare,
+  CloudDownload,
+} from "lucide-react";
+import type { TasksType, Assignees } from "../../Types/TaskTypes";
+import { FormatFileName, FormatSize } from "../../utils/helper";
 
 /* ---------- Utilities ---------- */
 function formatDate(dateStr?: string | null) {
@@ -23,11 +29,12 @@ function TaskCard({
   onProgressChange,
   onMarkComplete,
 }: {
-  task: MembersTasks;
+  task: TasksType;
   onProgressChange: (id: string, progress: number) => Promise<void>;
   onMarkComplete: (id: string) => Promise<void>;
 }) {
   const progress = task.progress ?? 0;
+  const completed = task.status === "COMPLETED";
 
   const priorityColor =
     task.priority === "High"
@@ -37,14 +44,25 @@ function TaskCard({
       : "bg-yellow-400";
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border p-5 flex flex-col justify-between min-h-[220px]">
+    <div
+      key={`task-${task.id}`}
+      className="bg-white rounded-xl shadow-sm border p-5 flex flex-col justify-between min-h-[220px]"
+    >
       <div>
         <div className="flex justify-between items-start gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-slate-800">
+            <h3
+              className={`text-lg font-semibold ${
+                completed ? "line-through text-green-600" : ""
+              } text-slate-800`}
+            >
               {task.title}
             </h3>
-            <p className="text-sm text-slate-500 mt-1 line-clamp-2">
+            <p
+              className={`text-sm ${
+                completed ? "line-through text-gray-400" : ""
+              } text-slate-500 mt-1 line-clamp-2`}
+            >
               {task.description || "No description"}
             </p>
           </div>
@@ -130,25 +148,52 @@ function TaskCard({
         </div>
       </div>
 
-      {/* bottom row: actions and attachments */}
-      <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          {task.task_file ? (
-            <a
-              href={task.task_file}
-              target="_blank"
-              rel="noreferrer"
-              download
-              className="inline-flex items-center gap-2 text-sm px-3 py-1 rounded-md border hover:bg-slate-50"
-            >
-              <CloudDownload size={16} /> Download
-            </a>
+      {/* bottom row: and attachments */}
+      <div className="mt-4">
+        <h4 className="text-gray-700 my-3">
+          Total files: {task.attached_files.length}
+        </h4>
+        <div className="flex px-8 flex-col md:flex-row items-start sm:items-center justify-between gap-2">
+          {task.attached_files ? (
+            task.attached_files.map((f) => {
+              return (
+                <a
+                  key={`file-${f.id}`}
+                  href={f.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  download
+                  className=""
+                >
+                  <div>
+                    <div>
+                      <p className="text-gray-600 text-xs">
+                        {FormatFileName(f.file_name)}
+                      </p>
+                      <p className="text-gray-600 text-xs">
+                        size: {FormatSize(f.file_size)}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <CloudDownload size={16} /> <span>Download</span>
+                    </div>
+                  </div>
+                </a>
+              );
+            })
           ) : (
             <div className="text-xs text-slate-400">No attachment</div>
           )}
         </div>
-
-        <div className="flex items-center gap-2">
+      </div>
+      {/* actions Button */}
+      <div className="flex items-center gap-2 mt-5">
+        {completed ? (
+          <div className="flex items-center gap-2 bg-green-400 text-white px-3 py-1 rounded-md text-sm">
+            <CheckSquare size={16} /> Completed
+          </div>
+        ) : (
           <button
             onClick={() => onMarkComplete(task.id)}
             className="inline-flex items-center gap-2 bg-green-600 text-white px-3 py-1 rounded-md text-sm hover:bg-green-700"
@@ -156,7 +201,7 @@ function TaskCard({
           >
             <CheckCircle size={16} /> Mark Complete
           </button>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -164,7 +209,7 @@ function TaskCard({
 
 /* ---------- Main page component ---------- */
 export default function MemberTaskPage() {
-  const [tasks, setTasks] = useState<MembersTasks[]>([]);
+  const [tasks, setTasks] = useState<TasksType[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<"all" | "completed" | "in_progress">(
     "all"
@@ -209,10 +254,13 @@ export default function MemberTaskPage() {
     TaskServices.UpdateProgress(id, payload)
       .then(() => {
         toast.success("Progress updated");
+        load();
       })
       .catch((e) => {
         setTasks(prev);
-        toast.error(e.message || "Failed to update progress");
+        console.log("Progress error", e);
+
+        toast.error(e.detail || "Failed to update progress");
       });
   }
 
@@ -227,7 +275,7 @@ export default function MemberTaskPage() {
       TaskServices.UpdateTask(id, { progress: 100, status: "Completed" });
       toast.success("Task marked complete");
     } catch (err) {
-      console.error(err);
+      console.error("Error", err);
       setTasks(prev);
       toast.error("Failed to mark complete");
     }
@@ -277,7 +325,7 @@ export default function MemberTaskPage() {
         </div>
 
         {/* tasks grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           {loading ? (
             <div className="col-span-full text-center text-slate-500 py-10">
               Loading tasks...
@@ -289,7 +337,7 @@ export default function MemberTaskPage() {
           ) : (
             filteredTasks.map((task) => (
               <TaskCard
-                key={task.id}
+                key={`tc-${task.id}`}
                 task={task}
                 onProgressChange={handleProgressChange}
                 onMarkComplete={handleMarkComplete}
