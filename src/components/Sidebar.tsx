@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+
 import {
   Home,
   Users,
@@ -10,6 +11,8 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { CurrentUser } from "../utils/helper";
+import type { UserCompactType } from "../Types/UsersTypes";
 
 type Role = "Admin" | "Manager" | "Member" | null;
 
@@ -80,6 +83,7 @@ function getCurrentRole(): Role {
 }
 export default function Sidebar(): React.ReactElement | null {
   const role = getCurrentRole();
+  const CUser: UserCompactType = CurrentUser();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -187,11 +191,26 @@ export default function Sidebar(): React.ReactElement | null {
       <div className="px-3 py-4 border-t border-slate-700">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left hover:bg-slate-700"
+          className="w-full flex gap-3 px-3 py-2 rounded-md text-left hover:bg-slate-700"
           type="button"
         >
-          <LogOut className="w-5 h-5" />
-          {!collapsed && <span className="font-medium">Logout</span>}
+          <LogOut className="w-5 h-5 mt-1" />
+          {!collapsed && (
+            <div className="">
+              <p className="font-medium">Logout</p>
+              <div className="text-xs text-gray-400 flex items-center gap-2">
+                <img
+                  className="size-5 rounded-full"
+                  src={CUser.profile_picture}
+                  alt=""
+                />
+                <div>
+                  <p>{CUser.username}</p>
+                  <p className="text-[10px]">{CUser.email}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </button>
       </div>
     </aside>
@@ -238,7 +257,7 @@ export default function Sidebar(): React.ReactElement | null {
         className="w-12 h-12 fixed bottom-16 bg-white/5 rounded-lg flex items-center justify-center text-red-400 hover:bg-white/10 mt-2"
         type="button"
       >
-        <LogOut className="w-5 h-5" />
+        <LogOut className="size-5" />
       </button>
     </div>
   );
@@ -309,11 +328,24 @@ export default function Sidebar(): React.ReactElement | null {
         <div className="absolute bottom-4 left-0 right-0 px-4">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left hover:bg-slate-700"
+            className="w-full flex gap-3 px-3 py-2 rounded-md text-left hover:bg-slate-700"
             type="button"
           >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">Logout</span>
+            <LogOut className="w-5 h-5 mt-1" />
+            <div className="">
+              <p className="font-medium">Logout</p>
+              <div className="text-xs text-gray-400 flex items-center gap-2">
+                <img
+                  className="size-5 rounded-full"
+                  src={CUser.profile_picture}
+                  alt=""
+                />
+                <div>
+                  <p>{CUser.username}</p>
+                  <p>{CUser.email}</p>
+                </div>
+              </div>
+            </div>
           </button>
         </div>
       </div>

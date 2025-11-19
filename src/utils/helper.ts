@@ -1,3 +1,4 @@
+import type { UserCompactType } from "../Types/UsersTypes";
 export function FormatFileName(name: string, len = 18): string {
   if (!name) return name;
   if (len <= 0) return "";
@@ -66,4 +67,29 @@ export function FormatSize(size: number): string {
     unit = "tb";
   }
   return `${n.toFixed(2)} ${unit}`;
+}
+
+export function CurrentUser() {
+  const stored = localStorage.getItem("user_info") || "{}";
+  const user: UserCompactType = JSON.parse(stored);
+  return user;
+}
+
+// format ISO timestamp to friendly string (today/tomorrow or date + time)
+export function formatTime(iso?: string | null) {
+  if (!iso) return "";
+  try {
+    const d = new Date(iso);
+    const diff = Date.now() - d.getTime();
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+
+    if (diff < minute) return "just now";
+    if (diff < hour) return `${Math.floor(diff / minute)}m`;
+    if (diff < day) return `${Math.floor(diff / hour)}h`;
+    return d.toLocaleString();
+  } catch {
+    return String(iso);
+  }
 }

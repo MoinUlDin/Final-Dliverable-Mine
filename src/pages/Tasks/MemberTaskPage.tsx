@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
 import TaskServices from "../../services/TaskServices";
 import toast from "react-hot-toast";
-import {
-  CheckCheck,
-  CheckCircle,
-  CheckSquare,
-  CloudDownload,
-} from "lucide-react";
+import { CheckCircle, CheckSquare, CloudDownload } from "lucide-react";
 import type { TasksType, Assignees } from "../../Types/TaskTypes";
 import { FormatFileName, FormatSize } from "../../utils/helper";
 
@@ -46,13 +41,13 @@ function TaskCard({
   return (
     <div
       key={`task-${task.id}`}
-      className="bg-white rounded-xl shadow-sm border p-5 flex flex-col justify-between min-h-[220px]"
+      className="bg-white rounded-xl shadow-sm border p-3 sm:p-5 flex flex-col justify-between min-h-[220px]"
     >
       <div>
         <div className="flex justify-between items-start gap-3">
           <div>
             <h3
-              className={`text-lg font-semibold ${
+              className={`text-sm sm:text-lg font-semibold ${
                 completed ? "line-through text-green-600" : ""
               } text-slate-800`}
             >
@@ -67,7 +62,7 @@ function TaskCard({
             </p>
           </div>
           <div
-            className={`px-2 py-1 rounded text-xs font-semibold text-white ${priorityColor} self-start`}
+            className={`px-1 sm:px-2 py-1 rounded text-xs font-semibold text-white ${priorityColor} self-start`}
           >
             {task.priority?.toUpperCase() ?? "MEDIUM"}
           </div>
@@ -110,8 +105,8 @@ function TaskCard({
         </div>
 
         {/* meta row */}
-        <div className="mt-4 flex items-center justify-between text-sm text-slate-500 gap-3">
-          <div className="flex items-center gap-3">
+        <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between text-sm text-slate-500 gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             {task.assigned_users.map((item: Assignees) => {
               return (
                 <div className="flex items-center gap-2">
@@ -153,7 +148,7 @@ function TaskCard({
         <h4 className="text-gray-700 my-3">
           Total files: {task.attached_files.length}
         </h4>
-        <div className="flex px-8 flex-col md:flex-row items-start sm:items-center justify-between gap-2">
+        <div className="flex px-8 flex-col md:flex-row items-start md:items-center justify-between gap-2">
           {task.attached_files ? (
             task.attached_files.map((f) => {
               return (
@@ -175,7 +170,7 @@ function TaskCard({
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 text-sm">
                       <CloudDownload size={16} /> <span>Download</span>
                     </div>
                   </div>
@@ -291,19 +286,21 @@ export default function MemberTaskPage() {
   });
 
   return (
-    <div className="p-6 min-h-screen bg-gradient-to-b from-emerald-50 to-white">
+    <div className="p-2 md:p-4 lg:p-6 min-h-screen bg-gradient-to-b from-emerald-50 to-white">
       {/* header */}
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-extrabold text-emerald-700">My Tasks</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-emerald-700">
+            My Tasks
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500">
             Manage your assigned tasks and track progress
           </p>
         </div>
 
         {/* filters */}
-        <div className="flex items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row flex-start sm:items-center justify-between gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value as any)}
@@ -312,6 +309,7 @@ export default function MemberTaskPage() {
               <option value="all">All Tasks</option>
               <option value="in_progress">In Progress</option>
               <option value="completed">Completed</option>
+              <option value="completed">OverDue</option>
             </select>
             <select className="form-select">
               <option>Due Date</option>
