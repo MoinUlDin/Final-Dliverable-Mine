@@ -132,8 +132,8 @@ export default function MemberDashboard() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-6">
-        <div className="bg-white p-3 lg:p-6 rounded-2xl shadow-sm border border-slate-200">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4">
+        <div className="bg-white p-3 lg:p-[22px] rounded-2xl shadow-sm border border-slate-200">
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-xs lg:text-sm font-medium text-slate-600">

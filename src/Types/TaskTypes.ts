@@ -21,7 +21,7 @@ export interface TasksType {
   title: string;
   description: string;
   priority: string;
-  status: string;
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "Over_Due";
   progress: number;
   due_date: string;
   created_at: string;

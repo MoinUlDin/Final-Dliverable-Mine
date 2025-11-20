@@ -1,5 +1,7 @@
 import api from "./api";
-
+export interface AssignPayload {
+  assignees: number[];
+}
 export default class TaskServices {
   /** GET /tasks/ */
   static async FetchTasks() {
@@ -168,12 +170,10 @@ export default class TaskServices {
    * POST /tasks/{id}/assign/
    * Body: { assignees: [1,2,3] }
    */
-  static async AssignTask(
-    id: number | string,
-    assignees: Array<number | string>
-  ) {
+
+  static async AssignTask(id: number | string, payload: AssignPayload) {
     try {
-      const response = await api.post(`/tasks/${id}/assign/`, { assignees });
+      const response = await api.post(`/tasks/${id}/assign/`, payload);
       return response.data;
     } catch (error: any) {
       console.log(`Error Assigning Task ${id}`, error);

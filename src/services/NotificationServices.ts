@@ -21,7 +21,7 @@ export default class NotificationServices {
   }
   static async MarkAllAsRead() {
     try {
-      const response = await api.post(`/tasks/notification/mark-all-read/`);
+      const response = await api.post(`/tasks/notifications/mark-all-read/`);
       return response.data;
     } catch (error: any) {
       console.log("Error Fetching Active Users ", error);

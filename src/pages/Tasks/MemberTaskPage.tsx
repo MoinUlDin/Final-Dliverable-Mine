@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { CheckCircle, CheckSquare, CloudDownload } from "lucide-react";
 import type { TasksType, Assignees } from "../../Types/TaskTypes";
 import { FormatFileName, FormatSize } from "../../utils/helper";
+import AuthServices from "../../services/AuthServices";
 
 /* ---------- Utilities ---------- */
 function formatDate(dateStr?: string | null) {
@@ -30,6 +31,7 @@ function TaskCard({
 }) {
   const progress = task.progress ?? 0;
   const completed = task.status === "COMPLETED";
+  const overdue = task.status === "Over_Due";
 
   const priorityColor =
     task.priority === "High"
@@ -37,6 +39,14 @@ function TaskCard({
       : task.priority === "Low"
       ? "bg-green-400"
       : "bg-yellow-400";
+
+  const statusColor = () => {
+    if (task.status === "COMPLETED") return "bg-green-400";
+    else if (task.status === "PENDING") return "bg-gray-400";
+    else if (task.status === "IN_PROGRESS") return "bg-blue-400";
+    else if (task.status === "Over_Due") return "bg-red-400";
+    else return "bg-amber-400";
+  };
 
   return (
     <div
@@ -61,10 +71,17 @@ function TaskCard({
               {task.description || "No description"}
             </p>
           </div>
-          <div
-            className={`px-1 sm:px-2 py-1 rounded text-xs font-semibold text-white ${priorityColor} self-start`}
-          >
-            {task.priority?.toUpperCase() ?? "MEDIUM"}
+          <div className="flex items-center gap-1">
+            <div
+              className={`px-1 sm:px-2 py-1 rounded text-xs font-semibold text-white ${statusColor()} self-start`}
+            >
+              {task.status}
+            </div>
+            <div
+              className={`px-1 sm:px-2 py-1 rounded text-xs font-semibold text-white ${priorityColor} self-start`}
+            >
+              {task.priority?.toUpperCase() ?? "MEDIUM"}
+            </div>
           </div>
         </div>
 
@@ -109,18 +126,23 @@ function TaskCard({
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             {task.assigned_users.map((item: Assignees) => {
               return (
-                <div className="flex items-center gap-2">
+                <div
+                  className="flex items-center gap-2"
+                  key={`${task.id}-assignee-${
+                    (item as any).assignee?.id || Math.random()
+                  }`}
+                >
                   <img
-                    src={item.assignee.profile_picture}
+                    src={(item as any).assignee.profile_picture}
                     alt={"Assignee"}
                     className="w-7 h-7 rounded-full object-cover"
                   />
                   <div>
                     <div className="text-sm text-slate-700">
-                      {item.assignee.username}
+                      {(item as any).assignee.username}
                     </div>
                     <div className="text-xs text-slate-400">
-                      By: {item.assigned_by.username ?? "—"}
+                      By: {(item as any).assigned_by?.username ?? "—"}
                     </div>
                   </div>
                 </div>
@@ -206,9 +228,14 @@ function TaskCard({
 export default function MemberTaskPage() {
   const [tasks, setTasks] = useState<TasksType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [filter, setFilter] = useState<"all" | "completed" | "in_progress">(
-    "all"
+  const [filter, setFilter] = useState<
+    "all" | "completed" | "in_progress" | "over_due" | "pending"
+  >("all");
+  // new sort state: 'due_date' | 'priority' | 'progress'
+  const [sortBy, setSortBy] = useState<"due_date" | "priority" | "progress">(
+    "due_date"
   );
+
   useEffect(() => {
     load();
   }, []);
@@ -238,14 +265,14 @@ export default function MemberTaskPage() {
           ? {
               ...x,
               progress: newProgress,
-              status: newProgress === 100 ? "Completed" : x.status,
+              status: newProgress === 100 ? "COMPLETED" : x.status,
             }
           : x
       )
     );
 
     const payload: any = { progress: newProgress };
-    if (newProgress === 100) payload.status = "Completed";
+    if (newProgress === 100) payload.status = "COMPLETED";
     TaskServices.UpdateProgress(id, payload)
       .then(() => {
         toast.success("Progress updated");
@@ -263,7 +290,7 @@ export default function MemberTaskPage() {
     const prev = tasks.slice();
     setTasks((t) =>
       t.map((x) =>
-        x.id === id ? { ...x, progress: 100, status: "Completed" } : x
+        x.id === id ? { ...x, progress: 100, status: "COMPLETED" } : x
       )
     );
     try {
@@ -276,13 +303,44 @@ export default function MemberTaskPage() {
     }
   }
 
+  // filtering
   const filteredTasks = tasks.filter((t) => {
     if (filter === "all") return true;
     if (filter === "completed")
       return (t.status || "").toLowerCase() === "completed";
     if (filter === "in_progress")
       return (t.status || "").toLowerCase().includes("progress");
+    if (filter === "pending")
+      return (t.status || "").toLowerCase().includes("pending");
+    if (filter === "over_due") return isOverdue(t);
     return true;
+  });
+
+  // sorting
+  const sortedTasks = filteredTasks.slice().sort((a, b) => {
+    if (sortBy === "due_date") {
+      const ta = a.due_date
+        ? new Date(a.due_date).getTime()
+        : Number.POSITIVE_INFINITY;
+      const tb = b.due_date
+        ? new Date(b.due_date).getTime()
+        : Number.POSITIVE_INFINITY;
+      return ta - tb;
+    }
+
+    if (sortBy === "priority") {
+      const rank = (p: string | undefined) =>
+        p === "High" ? 1 : p === "Medium" ? 2 : p === "Low" ? 3 : 4;
+      return rank(a.priority) - rank(b.priority);
+    }
+
+    if (sortBy === "progress") {
+      const pa = typeof a.progress === "number" ? a.progress : 0;
+      const pb = typeof b.progress === "number" ? b.progress : 0;
+      return pb - pa; // higher progress first
+    }
+
+    return 0;
   });
 
   return (
@@ -308,17 +366,23 @@ export default function MemberTaskPage() {
             >
               <option value="all">All Tasks</option>
               <option value="in_progress">In Progress</option>
+              <option value="pending">Pending</option>
               <option value="completed">Completed</option>
-              <option value="completed">OverDue</option>
+              <option value="over_due">OverDue</option>
             </select>
-            <select className="form-select">
-              <option>Due Date</option>
-              <option>Priority</option>
-              <option>Progress</option>
+
+            <select
+              className="form-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+            >
+              <option value="due_date">Due Date</option>
+              <option value="priority">Priority</option>
+              <option value="progress">Progress</option>
             </select>
           </div>
           <div className="text-sm text-slate-500">
-            Showing {filteredTasks.length} of {tasks.length} tasks
+            Showing {sortedTasks.length} of {tasks.length} tasks
           </div>
         </div>
 
@@ -328,12 +392,12 @@ export default function MemberTaskPage() {
             <div className="col-span-full text-center text-slate-500 py-10">
               Loading tasks...
             </div>
-          ) : filteredTasks.length === 0 ? (
+          ) : sortedTasks.length === 0 ? (
             <div className="col-span-full text-center text-slate-500 py-10">
               No tasks found.
             </div>
           ) : (
-            filteredTasks.map((task) => (
+            sortedTasks.map((task) => (
               <TaskCard
                 key={`tc-${task.id}`}
                 task={task}

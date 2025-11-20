@@ -26,7 +26,7 @@ const MemberDashboard = lazy(
 
 // Admin--Managers
 const TaskManagerPage = lazy(() => import("./pages/Tasks/TaskManagerPage"));
-
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const WorkingOnPage = lazy(() => import("./pages/WorkingOnPage"));
 function App() {
   return (
@@ -96,6 +96,14 @@ function App() {
                     <MemberTaskPage />
                   </SidebarLayout>
                 </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-profile"
+              element={
+                <SidebarLayout>
+                  <ProfilePage />
+                </SidebarLayout>
               }
             />
             <Route

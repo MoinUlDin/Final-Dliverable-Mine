@@ -1,8 +1,8 @@
 import { useEffect, useState, type JSX } from "react";
 import TaskServices from "../../services/TaskServices";
 import type { TasksType, AttachedFile } from "../../Types/TaskTypes";
-import type { UserCompactType } from "../../Types/UsersTypes";
 import CreateEditTask from "../../components/Popups.tsx/CreateEditTask";
+import AssignmentPopup from "../../components/Popups.tsx/AssignmentPopup";
 
 import {
   Plus,
@@ -24,7 +24,9 @@ export default function TaskManagerPage(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [initialData, setInitialData] = useState<TasksType | null>(null);
   // modals / UI state
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreate, setShowCreate] = useState<boolean>(false);
+  const [showAssign, setShowAssign] = useState<boolean>(false);
+  const [selectedTask, setSelectedTask] = useState<TasksType | null>(null);
 
   useEffect(() => {
     fetchTasks();
@@ -65,7 +67,7 @@ export default function TaskManagerPage(): JSX.Element {
     if (!files || !files.length) return;
     setLoading(true);
     try {
-      await TaskServices.UploadFiles(task.id, files, undefined, (ev) => {});
+      await TaskServices.UploadFiles(task.id, files, undefined, () => {});
       fetchTasks();
     } catch (err) {
       console.error(err);
@@ -76,7 +78,9 @@ export default function TaskManagerPage(): JSX.Element {
   };
 
   // Comments — using PartialUpdateTask sending { comment }
-  const openComment = (t: TasksType) => {};
+  const openComment = (t: TasksType) => {
+    console.log("comment", t);
+  };
   const hendleCreate = () => {
     setInitialData(null);
     setShowCreate(true);
@@ -88,6 +92,8 @@ export default function TaskManagerPage(): JSX.Element {
   };
   const handleAssign = (task: TasksType) => {
     console.log("Assigning Task: ", task);
+    setSelectedTask(task);
+    setShowAssign(true);
   };
   const handleDeleteFile = (id: string) => {
     console.log("delete clicked wiht id: ", id);
@@ -98,7 +104,7 @@ export default function TaskManagerPage(): JSX.Element {
         toast.success("File Deleted Succussfully");
         fetchTasks();
       })
-      .catch((e) => {
+      .catch(() => {
         toast.error("Error deleting file");
       });
   };
@@ -177,7 +183,7 @@ export default function TaskManagerPage(): JSX.Element {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 ">
             {tasks.map((t) => {
               const completed = t.status === "COMPLETED";
-              const overdue = t.status === "Ove";
+              const overdue = t.status === "Over_Due";
               return (
                 <article
                   key={t.id}
@@ -406,6 +412,13 @@ export default function TaskManagerPage(): JSX.Element {
           onSuccess={fetchTasks}
           initialData={initialData}
           onClose={() => setShowCreate(false)}
+        />
+      )}
+      {showAssign && (
+        <AssignmentPopup
+          onSuccess={fetchTasks}
+          task={selectedTask}
+          onClose={() => setShowAssign(false)}
         />
       )}
     </div>
