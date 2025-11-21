@@ -293,8 +293,9 @@ export default function MemberTaskPage() {
         x.id === id ? { ...x, progress: 100, status: "COMPLETED" } : x
       )
     );
+    const payload: any = { progress: 100 };
     try {
-      TaskServices.UpdateTask(id, { progress: 100, status: "Completed" });
+      TaskServices.UpdateProgress(id, payload);
       toast.success("Task marked complete");
     } catch (err) {
       console.error("Error", err);

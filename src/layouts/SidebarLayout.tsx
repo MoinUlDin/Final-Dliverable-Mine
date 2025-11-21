@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { CurrentUser } from "../utils/helper";
 import { formatTime } from "../utils/helper";
 import toast from "react-hot-toast";
+import type { UserCompactType } from "../Types/UsersTypes";
 type Props = {
   children: React.ReactNode;
 };
@@ -20,13 +21,18 @@ export default function SidebarLayout({ children }: Props) {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
-  const CurrentUsr = CurrentUser();
+  const [CurrentUsr, setCurrentUsr] = useState<UserCompactType>();
+
   // unread count derived from notifications
   const unreadCount = (notification || []).reduce(
     (acc, n) => (n.read ? acc : acc + 1),
     0
   );
 
+  useEffect(() => {
+    const CU = CurrentUser();
+    setCurrentUsr(CU);
+  }, [CurrentUser]);
   // fetch notifications
   const fetchNotifications = async (): Promise<void> => {
     try {
@@ -195,7 +201,7 @@ export default function SidebarLayout({ children }: Props) {
                     </div>
                   </div>
 
-                  <div className="max-h-84 overflow-auto">
+                  <div className="max-h-80 overflow-auto">
                     {notification && notification.length === 0 ? (
                       <div className="p-6 text-center text-slate-500">
                         No notifications

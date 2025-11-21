@@ -1,4 +1,4 @@
-import { useEffect, useState, type JSX } from "react";
+import { useEffect, useMemo, useState, type JSX } from "react";
 import TaskServices from "../../services/TaskServices";
 import type { TasksType, AttachedFile } from "../../Types/TaskTypes";
 import CreateEditTask from "../../components/Popups.tsx/CreateEditTask";
@@ -14,9 +14,20 @@ import {
   Download,
   MessageCircleCode,
   User,
+  Search,
+  X,
 } from "lucide-react";
 import { FormatFileName, FormatSize } from "../../utils/helper";
 import toast from "react-hot-toast";
+
+/**
+ * Fallback file URL (user-uploaded image). The developer requested that
+ * uploaded file paths from the session be used directly. We'll use it as a
+ * fallback when attached_files items don't have a url.
+ *
+ * We'll let your server/service transform this path into a proper public URL.
+ */
+const FILE_FALLBACK_URL = "/mnt/data/9aef8500-1147-42ce-9d1d-d741fbfb1d52.png";
 
 export default function TaskManagerPage(): JSX.Element {
   const [tasks, setTasks] = useState<TasksType[]>([]);
@@ -28,17 +39,28 @@ export default function TaskManagerPage(): JSX.Element {
   const [showAssign, setShowAssign] = useState<boolean>(false);
   const [selectedTask, setSelectedTask] = useState<TasksType | null>(null);
 
+  // filters & search
+  const [statusFilter, setStatusFilter] = useState<string>(""); // "", "PENDING", etc.
+  const [priorityFilter, setPriorityFilter] = useState<string>(""); // "", "LOW", "MEDIUM", "HIGH"
+  const [rawSearch, setRawSearch] = useState<string>("");
+  const [search, setSearch] = useState<string>(""); // debounced
+  const [debounceMs] = useState<number>(300);
+
   useEffect(() => {
     fetchTasks();
   }, []);
+
+  // debounce rawSearch -> search
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(rawSearch.trim()), debounceMs);
+    return () => clearTimeout(t);
+  }, [rawSearch, debounceMs]);
 
   function fetchTasks() {
     setLoading(true);
     setError(null);
     TaskServices.FetchTasks()
       .then((res) => {
-        // assume API returns array
-        console.log("tasks", res);
         setTasks(Array.isArray(res) ? res : []);
       })
       .catch((e) => {
@@ -86,22 +108,19 @@ export default function TaskManagerPage(): JSX.Element {
     setShowCreate(true);
   };
   const handleEdit = (task: TasksType) => {
-    console.log("editing Task: ", task);
     setInitialData(task);
     setShowCreate(true);
   };
   const handleAssign = (task: TasksType) => {
-    console.log("Assigning Task: ", task);
     setSelectedTask(task);
     setShowAssign(true);
   };
   const handleDeleteFile = (id: string) => {
-    console.log("delete clicked wiht id: ", id);
     if (!id)
       return toast.error("No id found, System Error", { duration: 4000 });
     TaskServices.DeleteFile(id)
       .then(() => {
-        toast.success("File Deleted Succussfully");
+        toast.success("File Deleted Successfully");
         fetchTasks();
       })
       .catch(() => {
@@ -109,7 +128,7 @@ export default function TaskManagerPage(): JSX.Element {
       });
   };
 
-  // helpers for badges and avatars
+  // helpers for badges and avatars (unchanged)
   const priorityBadge = (p: string) => {
     switch (p) {
       case "Low":
@@ -136,15 +155,57 @@ export default function TaskManagerPage(): JSX.Element {
         return "bg-green-100 text-green-800 border-green-200";
       case "CANCELLED":
         return "bg-red-100 text-red-800 border-red-200";
+      case "Over_Due":
+        return "bg-red-50 text-red-700 border-red-200";
       default:
         return "bg-slate-100 text-slate-800 border-slate-200";
     }
   };
 
+  // Filtering logic: memoized for performance
+  const filteredTasks = useMemo(() => {
+    const q = search.toLowerCase();
+
+    return tasks.filter((t) => {
+      // status filter
+      if (
+        statusFilter &&
+        String(t.status).toLowerCase() !== statusFilter.toLowerCase()
+      ) {
+        return false;
+      }
+      // priority filter
+      if (
+        priorityFilter &&
+        String(t.priority).toLowerCase() !== priorityFilter.toLowerCase()
+      ) {
+        return false;
+      }
+      // search across title, description, assignees (username, first_name, last_name)
+      if (!q) return true;
+      const inTitle = t.title?.toLowerCase().includes(q);
+      const inDesc = t.description?.toLowerCase().includes(q);
+      const inAssignees =
+        Array.isArray(t.assigned_users) &&
+        t.assigned_users.some((a) => {
+          const u = a.assignee;
+          return (
+            (u.username && u.username.toLowerCase().includes(q)) ||
+            (u.first_name && u.first_name.toLowerCase().includes(q)) ||
+            (u.last_name && u.last_name.toLowerCase().includes(q))
+          );
+        });
+      return Boolean(inTitle || inDesc || inAssignees);
+    });
+  }, [tasks, statusFilter, priorityFilter, search]);
+
+  const activeFilterCount =
+    (statusFilter ? 1 : 0) + (priorityFilter ? 1 : 0) + (search ? 1 : 0);
+
   return (
-    <div className="min-h-screen bg-gray-50 text-slate-900 overflow-x-hidden p-4 sm:p-6 lg:p-10">
+    <div className="min-h-screen bg-gray-50 text-slate-900 overflow-x-hidden pl-3 sm:p-6 lg:p-10">
       <div className="max-w-7xl mx-auto">
-        <header className="flex flex-col gap-3 sm:gap-1 sm:flex-row items-start sm:items-center justify-between mb-6">
+        <header className="flex flex-col gap-3 sm:gap-2 md:flex-row items-start md:items-center justify-between mb-6">
           <div>
             <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold">
               Tasks — Manage
@@ -153,23 +214,104 @@ export default function TaskManagerPage(): JSX.Element {
               Manage Tasks Effectively.
             </p>
           </div>
-          <div className="flex items-center gap-3 self-end">
-            <button
-              onClick={hendleCreate}
-              className="text-xs lg:text-sm inline-flex items-center gap-2 md:gap-1 lg:gap-2 px-3 py-2 rounded-md bg-slate-900 text-white hover:bg-slate-800"
-            >
-              <Plus className="size-3 sm:size-4" />
-              New Task
-            </button>
-            <button
-              onClick={() => fetchTasks()}
-              className="text-xs lg:text-sm inline-flex items-center gap-2 px-3 py-2 rounded-md border border-slate-200 bg-white"
-            >
-              <RefreshCw className="size-3 sm:size-4" />
-              Refresh
-            </button>
+
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 items-start sm:items-center">
+            <div className="flex items-center gap-3 self-end">
+              <button
+                onClick={hendleCreate}
+                className="text-xs lg:text-sm inline-flex items-center gap-2 px-3 py-2 rounded-md bg-slate-900 text-white hover:bg-slate-800"
+              >
+                <Plus className="size-3 sm:size-4" />
+                New Task
+              </button>
+              <button
+                onClick={() => fetchTasks()}
+                className="text-xs lg:text-sm inline-flex items-center gap-2 px-3 py-2 rounded-md border border-slate-200 bg-white"
+              >
+                <RefreshCw className="size-3 sm:size-4" />
+                Refresh
+              </button>
+            </div>
           </div>
         </header>
+        {/* Search & Filters */}
+        <div className="my-2">
+          <div className="flex items-center gap-2 flex-col md:flex-row">
+            <div className="relative flex-1 w-full flex">
+              <Search className="absolute size-4 left-3 top-2 text-slate-400" />
+              <input
+                value={rawSearch}
+                onChange={(e) => setRawSearch(e.target.value)}
+                placeholder="Search title, description or assignees..."
+                className="pl-10 pr-3 py-2 rounded-md border bg-white text-sm w-32 flex-1"
+              />
+              {rawSearch ? (
+                <button
+                  onClick={() => setRawSearch("")}
+                  title="Clear search"
+                  className="absolute right-2 top-1.5 text-slate-400"
+                >
+                  <X />
+                </button>
+              ) : null}
+            </div>
+
+            <div className="flex gap-2 items-center self-start">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-2 sm:px-3 py-2 rounded-md border bg-white text-xs sm:text-sm"
+                aria-label="Filter by status"
+              >
+                <option value="">All status</option>
+                <option value="PENDING">Pending</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+                <option value="Over_Due">Overdue</option>
+              </select>
+
+              <select
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
+                className="px-2 sm:px-3 py-2 rounded-md border bg-white text-xs sm:text-sm"
+                aria-label="Filter by priority"
+              >
+                <option value="">All priority</option>
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+              </select>
+            </div>
+
+            <button
+              onClick={() => {
+                setStatusFilter("");
+                setPriorityFilter("");
+                setRawSearch("");
+              }}
+              className="px-3 py-2 rounded-md border bg-white text-sm"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+        {/* small status row */}
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-1 justify-between mb-4">
+          <div className="text-sm text-slate-600">
+            Showing <strong>{filteredTasks.length}</strong> of{" "}
+            <strong>{tasks.length}</strong> tasks
+            {activeFilterCount ? (
+              <span className="ml-3 text-xs text-slate-500">
+                ({activeFilterCount} filter(s) active)
+              </span>
+            ) : null}
+          </div>
+
+          <div className="text-xs text-slate-500">
+            Tip: search by assignee username or name
+          </div>
+        </div>
 
         {/* error / loader */}
         {error && (
@@ -181,9 +323,8 @@ export default function TaskManagerPage(): JSX.Element {
         {/* responsive grid */}
         <main>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 ">
-            {tasks.map((t) => {
+            {filteredTasks.map((t) => {
               const completed = t.status === "COMPLETED";
-              const overdue = t.status === "Over_Due";
               return (
                 <article
                   key={t.id}
@@ -206,8 +347,7 @@ export default function TaskManagerPage(): JSX.Element {
                         <span
                           className={`text-xs px-2 py-1 rounded-full border ${priorityBadge(
                             t.priority
-                          )}
-                        `}
+                          )}`}
                         >
                           {t.priority || "—"}
                         </span>
@@ -216,8 +356,7 @@ export default function TaskManagerPage(): JSX.Element {
                         <span
                           className={`text-xs px-2 py-1 rounded-full border ${statusBadge(
                             t.status
-                          )}
-                        `}
+                          )}`}
                         >
                           {t.status || "—"}
                         </span>
@@ -269,13 +408,12 @@ export default function TaskManagerPage(): JSX.Element {
                             {(t.assigned_users || []).length || 0}
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-1">
                           {(t.assigned_users || []).map((a, idx) => (
                             <div
                               key={`assignee-${a.assignee.id}-${idx}`}
                               className="flex items-center gap-2 text-xs bg-white border border-slate-100 px-2 py-0.5 rounded-full"
                             >
-                              {/* avatar */}
                               {a.assignee.profile_picture ? (
                                 <img
                                   src={a.assignee.profile_picture}
@@ -307,7 +445,7 @@ export default function TaskManagerPage(): JSX.Element {
                           >
                             <div>
                               <a
-                                href={f.url || "#"}
+                                href={f.url || FILE_FALLBACK_URL}
                                 target="_blank"
                                 rel="noreferrer"
                                 title="Click to Download"
@@ -337,7 +475,7 @@ export default function TaskManagerPage(): JSX.Element {
                           </div>
                         ))}
 
-                        <label className="ml-auto flex  items-center gap-2 cursor-pointer text-xs text-slate-500">
+                        <label className="ml-auto flex items-center gap-2 cursor-pointer text-xs text-slate-500">
                           <input
                             type="file"
                             className="hidden"
@@ -358,7 +496,7 @@ export default function TaskManagerPage(): JSX.Element {
                     </div>
 
                     <div className="flex items-center justify-end gap-2 sm:gap-4 mt-4">
-                      {!completed && (
+                      {t.status !== "COMPLETED" && (
                         <button
                           className="p-1 rounded hover:bg-slate-100"
                           onClick={() => handleEdit(t)}
@@ -367,7 +505,7 @@ export default function TaskManagerPage(): JSX.Element {
                           <Edit className="size-4 sm:size-5" />
                         </button>
                       )}
-                      {!completed && (
+                      {t.status !== "COMPLETED" && (
                         <button
                           className="p-1 rounded hover:bg-slate-100"
                           onClick={() => handleAssign(t)}
@@ -399,7 +537,7 @@ export default function TaskManagerPage(): JSX.Element {
           </div>
 
           {/* empty state */}
-          {!loading && tasks.length === 0 && (
+          {!loading && filteredTasks.length === 0 && (
             <div className="mt-10 text-center text-slate-500">
               No tasks found. Create one with the New Task button.
             </div>

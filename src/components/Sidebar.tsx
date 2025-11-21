@@ -58,8 +58,8 @@ const LINKS: SidebarLink[] = [
     allowedRoles: ["Member"],
   },
   {
-    to: "/reports",
-    label: "Reports",
+    to: "/analytics",
+    label: "Analytics",
     Icon: FileText,
     allowedRoles: ["Admin", "Manager"],
   },

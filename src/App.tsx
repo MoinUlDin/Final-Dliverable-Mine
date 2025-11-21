@@ -27,6 +27,9 @@ const MemberDashboard = lazy(
 // Admin--Managers
 const TaskManagerPage = lazy(() => import("./pages/Tasks/TaskManagerPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const TaskStatisticsPage = lazy(
+  () => import("./pages/Dashboards/TaskStatisticsPage")
+);
 const WorkingOnPage = lazy(() => import("./pages/WorkingOnPage"));
 function App() {
   return (
@@ -84,6 +87,16 @@ function App() {
                 <RoleProtectedRoute allowedRoles={["Admin", "Manager"]}>
                   <SidebarLayout>
                     <TaskManagerPage />
+                  </SidebarLayout>
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <RoleProtectedRoute allowedRoles={["Admin", "Manager"]}>
+                  <SidebarLayout>
+                    <TaskStatisticsPage />
                   </SidebarLayout>
                 </RoleProtectedRoute>
               }
