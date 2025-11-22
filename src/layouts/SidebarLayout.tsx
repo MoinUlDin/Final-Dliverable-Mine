@@ -8,6 +8,11 @@ import { CurrentUser } from "../utils/helper";
 import { formatTime } from "../utils/helper";
 import toast from "react-hot-toast";
 import type { UserCompactType } from "../Types/UsersTypes";
+import CommentPopup from "../components/Popups.tsx/CommentPopup";
+import TaskServices from "../services/TaskServices";
+
+import type { TasksType } from "../Types/TaskTypes";
+
 type Props = {
   children: React.ReactNode;
 };
@@ -22,6 +27,8 @@ export default function SidebarLayout({ children }: Props) {
   const menuRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
   const [CurrentUsr, setCurrentUsr] = useState<UserCompactType>();
+  const [openComment, setOpenComment] = useState<boolean>(false);
+  const [selectedTask, setSelectedTask] = useState<TasksType | null>(null);
 
   // unread count derived from notifications
   const unreadCount = (notification || []).reduce(
@@ -41,6 +48,17 @@ export default function SidebarLayout({ children }: Props) {
     } catch (e) {
       console.error("Error Notifications: ", e);
     }
+  };
+
+  const fetchTaskById = (id: string) => {
+    TaskServices.FetchTaskById(id)
+      .then((r) => {
+        setSelectedTask(r);
+        setOpenComment(true);
+      })
+      .catch((e) => {
+        console.log("Error Fetching task, ", e);
+      });
   };
 
   // initial fetch + polling every 10s (clean up on unmount)
@@ -93,11 +111,21 @@ export default function SidebarLayout({ children }: Props) {
       });
   };
 
-  async function handleMarkRead(id: string) {
+  async function handleMarkRead(notification: NotificationsType) {
+    const id = notification.id;
     // optimistic UI
     setNotification((prev) =>
       prev ? prev.map((n) => (n.id === id ? { ...n, read: true } : n)) : prev
     );
+    console.log("notifications: ", notification);
+    const taskID = notification.meta["task_id"];
+    const notiType = notification.type === "Comment";
+    console.log("taskID: ", taskID);
+    console.log("notiType: ", notiType);
+    if (taskID && notiType) {
+      console.log("Fetching Task: ");
+      fetchTaskById(taskID);
+    }
     NotificationServices.MarkAsRead(id)
       .then(() => {})
       .catch((e) => console.log("error mark read: ", e));
@@ -211,7 +239,7 @@ export default function SidebarLayout({ children }: Props) {
                         {(notification || []).map((n) => (
                           <li
                             key={String(n.id)}
-                            onClick={() => handleMarkRead(n.id)}
+                            onClick={() => handleMarkRead(n)}
                             className={`flex gap-3 px-4 py-3 hover:cursor-pointer ${
                               n.read ? "bg-white" : "bg-slate-200"
                             }`}
@@ -238,7 +266,7 @@ export default function SidebarLayout({ children }: Props) {
                                   <div className="text-sm font-medium text-slate-900 truncate">
                                     {n.title}
                                   </div>
-                                  <div className="text-xs text-slate-500 mt-1 line-clamp-2">
+                                  <div className="text-xs text-slate-500 mt-1 line-clamp-3">
                                     {n.message}
                                   </div>
                                 </div>
@@ -251,7 +279,7 @@ export default function SidebarLayout({ children }: Props) {
                               <div className="mt-2 flex items-center gap-2">
                                 {!n.read && (
                                   <button
-                                    onClick={() => handleMarkRead(String(n.id))}
+                                    onClick={() => handleMarkRead(n)}
                                     className="text-xs px-2 py-1 bg-sky-50 text-sky-700 rounded hover:bg-sky-100"
                                     type="button"
                                   >
@@ -325,6 +353,13 @@ export default function SidebarLayout({ children }: Props) {
         </div>
         <main className="flex-1 p-1 sm:p-2 md:p-4 lg:p-6">{children}</main>
       </div>
+
+      {openComment && (
+        <CommentPopup
+          task={selectedTask!}
+          onClose={() => setOpenComment(false)}
+        />
+      )}
     </div>
   );
 }

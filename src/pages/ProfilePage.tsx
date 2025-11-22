@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import ProfileServices from "../services/ProfileServices";
 import toast from "react-hot-toast";
 import { Camera, Edit2, Save, Key, X, Eye, EyeOff } from "lucide-react";
+import CommentServices from "../services/CommentServices";
 
 type ProfilePayload = {
   first_name?: string;
@@ -50,6 +51,15 @@ export default function ProfilePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    CommentServices.FetchComments("11d2722c-8f9a-4415-84fb-d53650d7beb1")
+      .then((r) => {
+        console.log("Comments: ", r);
+      })
+      .catch((e) => {
+        console.log("error: ", e);
+      });
+  }, []);
   function loadProfile() {
     setLoading(true);
     ProfileServices.FetchProfile()

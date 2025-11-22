@@ -92,7 +92,7 @@ export default function TaskStatisticsPage(): JSX.Element {
     if (name === "avg_progress") {
       return [`${Number(value).toFixed(1)}%`, "Avg progress"];
     }
-    return [value, name === "tasks_created" ? "Created" : "Completed"];
+    return [value, name === "Created" ? "Created" : "Completed"];
   }
 
   // Fetch function

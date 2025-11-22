@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import TaskServices from "../../services/TaskServices";
 import toast from "react-hot-toast";
-import { CheckCircle, CheckSquare, CloudDownload } from "lucide-react";
+import {
+  CheckCircle,
+  CheckSquare,
+  CloudDownload,
+  MessageCircleIcon,
+} from "lucide-react";
 import type { TasksType, Assignees } from "../../Types/TaskTypes";
 import { FormatFileName, FormatSize } from "../../utils/helper";
-import AuthServices from "../../services/AuthServices";
+import CommentPopup from "../../components/Popups.tsx/CommentPopup";
 
 /* ---------- Utilities ---------- */
 function formatDate(dateStr?: string | null) {
@@ -24,10 +29,12 @@ function TaskCard({
   task,
   onProgressChange,
   onMarkComplete,
+  OnComment,
 }: {
   task: TasksType;
   onProgressChange: (id: string, progress: number) => Promise<void>;
   onMarkComplete: (id: string) => Promise<void>;
+  OnComment: (task: TasksType) => void;
 }) {
   const progress = task.progress ?? 0;
   const completed = task.status === "COMPLETED";
@@ -71,7 +78,7 @@ function TaskCard({
               {task.description || "No description"}
             </p>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1">
             <div
               className={`px-1 sm:px-2 py-1 rounded text-xs font-semibold text-white ${statusColor()} self-start`}
             >
@@ -205,7 +212,7 @@ function TaskCard({
         </div>
       </div>
       {/* actions Button */}
-      <div className="flex items-center gap-2 mt-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-5">
         {completed ? (
           <div className="flex items-center gap-2 bg-green-400 text-white px-3 py-1 rounded-md text-sm">
             <CheckSquare size={16} /> Completed
@@ -219,6 +226,13 @@ function TaskCard({
             <CheckCircle size={16} /> Mark Complete
           </button>
         )}
+        <button
+          onClick={() => OnComment(task)}
+          className="inline-flex items-center gap-2 bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700"
+        >
+          <MessageCircleIcon size={16} />
+          Comment
+        </button>
       </div>
     </div>
   );
@@ -228,6 +242,8 @@ function TaskCard({
 export default function MemberTaskPage() {
   const [tasks, setTasks] = useState<TasksType[]>([]);
   const [loading, setLoading] = useState(false);
+  const [openComment, setOpenComment] = useState<boolean>(false);
+  const [selectedTask, setSelectedTask] = useState<TasksType | null>(null);
   const [filter, setFilter] = useState<
     "all" | "completed" | "in_progress" | "over_due" | "pending"
   >("all");
@@ -303,6 +319,11 @@ export default function MemberTaskPage() {
       toast.error("Failed to mark complete");
     }
   }
+
+  const hanldeComment = (task: TasksType) => {
+    setSelectedTask(task);
+    setOpenComment(true);
+  };
 
   // filtering
   const filteredTasks = tasks.filter((t) => {
@@ -404,11 +425,19 @@ export default function MemberTaskPage() {
                 task={task}
                 onProgressChange={handleProgressChange}
                 onMarkComplete={handleMarkComplete}
+                OnComment={hanldeComment}
               />
             ))
           )}
         </div>
       </div>
+
+      {openComment && (
+        <CommentPopup
+          task={selectedTask!}
+          onClose={() => setOpenComment(false)}
+        />
+      )}
     </div>
   );
 }

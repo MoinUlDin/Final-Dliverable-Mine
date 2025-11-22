@@ -3,7 +3,7 @@ import api from "./api";
 export default class UserManagerment {
   static async FetchpendingRequests() {
     try {
-      const response = await api.get(`/tasks/auth/pending-requests`);
+      const response = await api.get(`/auth/pending-requests`);
       return response.data;
     } catch (error: any) {
       console.log("Error Fetching Pending ", error);
@@ -12,7 +12,7 @@ export default class UserManagerment {
   }
   static async ApproveRequest(payload: any) {
     try {
-      const response = await api.post(`/tasks/auth/approve/`, payload);
+      const response = await api.post(`/auth/approve/`, payload);
       return response.data;
     } catch (error: any) {
       console.log("Error Fetching Pending ", error);
@@ -21,7 +21,7 @@ export default class UserManagerment {
   }
   static async RejectRequest(payload: any) {
     try {
-      const response = await api.post(`/tasks/auth/approve/`, payload);
+      const response = await api.post(`/auth/approve/`, payload);
       return response.data;
     } catch (error: any) {
       console.log("Error Fetching Pending ", error);

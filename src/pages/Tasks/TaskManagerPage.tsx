@@ -3,6 +3,7 @@ import TaskServices from "../../services/TaskServices";
 import type { TasksType, AttachedFile } from "../../Types/TaskTypes";
 import CreateEditTask from "../../components/Popups.tsx/CreateEditTask";
 import AssignmentPopup from "../../components/Popups.tsx/AssignmentPopup";
+import CommentPopup from "../../components/Popups.tsx/CommentPopup";
 
 import {
   Plus,
@@ -37,6 +38,7 @@ export default function TaskManagerPage(): JSX.Element {
   // modals / UI state
   const [showCreate, setShowCreate] = useState<boolean>(false);
   const [showAssign, setShowAssign] = useState<boolean>(false);
+  const [showComment, setShowComment] = useState<boolean>(false);
   const [selectedTask, setSelectedTask] = useState<TasksType | null>(null);
 
   // filters & search
@@ -101,7 +103,8 @@ export default function TaskManagerPage(): JSX.Element {
 
   // Comments — using PartialUpdateTask sending { comment }
   const openComment = (t: TasksType) => {
-    console.log("comment", t);
+    setSelectedTask(t);
+    setShowComment(true);
   };
   const hendleCreate = () => {
     setInitialData(null);
@@ -557,6 +560,12 @@ export default function TaskManagerPage(): JSX.Element {
           onSuccess={fetchTasks}
           task={selectedTask}
           onClose={() => setShowAssign(false)}
+        />
+      )}
+      {showComment && (
+        <CommentPopup
+          task={selectedTask!}
+          onClose={() => setShowComment(false)}
         />
       )}
     </div>
