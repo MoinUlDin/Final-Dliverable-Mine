@@ -17,9 +17,6 @@ const UserManagementpage = lazy(
 // Member Related
 const MemberTaskPage = lazy(() => import("./pages/Tasks/MemberTaskPage"));
 
-const ManagerDashboard = lazy(
-  () => import("./pages/Dashboards/ManagerDashboard")
-);
 const MemberDashboard = lazy(
   () => import("./pages/Dashboards/MemberDashboard")
 );
@@ -66,7 +63,7 @@ function App() {
               element={
                 <RoleProtectedRoute allowedRoles={["Manager"]}>
                   <SidebarLayout>
-                    <ManagerDashboard />
+                    <AdminDashboard />
                   </SidebarLayout>
                 </RoleProtectedRoute>
               }

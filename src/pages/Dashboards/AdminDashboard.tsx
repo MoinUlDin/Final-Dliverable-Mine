@@ -1,7 +1,6 @@
 // src/pages/AdminDashboard.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Plus,
   Search,
   Users,
   CheckSquare,
@@ -11,9 +10,9 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import DashboardReportServices from "../../services/DashboardReportServices";
+import { CurrentUser } from "../../utils/helper";
 
 /* Use the local uploaded path so your infra can transform it to a URL */
-const FALLBACK_IMAGE = "/mnt/data/8e74240e-5478-4c5f-8131-1966cd51f7ed.png";
 
 type UserRow = {
   id: string;
@@ -48,8 +47,7 @@ export default function AdminDashboard() {
   // Filters & search
   const [q, setQ] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>(""); // "", Admin, Manager, Member
-  const [onlyActive, setOnlyActive] = useState<boolean>(false);
-
+  const CUser = CurrentUser();
   // pagination (simple client-side)
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -137,7 +135,6 @@ export default function AdminDashboard() {
     const low = q.trim().toLowerCase();
     return users
       .filter((u) => (roleFilter ? u.role === roleFilter : true))
-      .filter((u) => (onlyActive ? u.is_active : true))
       .filter((u) => {
         if (!low) return true;
         return (
@@ -146,7 +143,7 @@ export default function AdminDashboard() {
           (u.email || "").toLowerCase().includes(low)
         );
       });
-  }, [users, q, roleFilter, onlyActive]);
+  }, [users, q, roleFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageData = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -158,7 +155,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-slate-900">
-              Admin Dashboard
+              {CUser.role === "Admin" ? "Admin" : "Manager"} Dashboard
             </h1>
             <p className="text-sm text-slate-500 mt-1">
               Overview & user management

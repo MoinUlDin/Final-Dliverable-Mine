@@ -5,7 +5,6 @@ import {
   Home,
   Users,
   ClipboardList,
-  Settings,
   ChartColumnIncreasing,
   LogOut,
   Menu,
@@ -62,12 +61,6 @@ const LINKS: SidebarLink[] = [
     label: "Analytics",
     Icon: ChartColumnIncreasing,
     allowedRoles: ["Admin", "Manager"],
-  },
-  {
-    to: "/settings",
-    label: "Settings",
-    Icon: Settings,
-    allowedRoles: ["Admin"],
   },
 ];
 

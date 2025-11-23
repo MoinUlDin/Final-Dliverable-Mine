@@ -1,10 +1,8 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { TasksType } from "../../Types/TaskTypes";
 import CommentServices from "../../services/CommentServices";
 import toast from "react-hot-toast";
 import { X, Trash2, Send, Reply } from "lucide-react";
-
-const FALLBACK_AVATAR = "/mnt/data/8e74240e-5478-4c5f-8131-1966cd51f7ed.png";
 
 type UserCompactType = {
   id: number | string;

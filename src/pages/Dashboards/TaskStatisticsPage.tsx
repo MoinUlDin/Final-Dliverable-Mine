@@ -12,6 +12,7 @@ import {
   Bar,
 } from "recharts";
 import DashboardReportServices from "../../services/DashboardReportServices";
+import SpinnerLoader from "../../components/SpinnerLoader";
 
 // Tailwind-based responsive page. Default export a single React component.
 // NOTE: install Recharts in your project: `npm install recharts` or `yarn add recharts`
@@ -102,7 +103,7 @@ export default function TaskStatisticsPage(): JSX.Element {
     if (endDate) params.set("end_date", endDate);
     if (granularity) params.set("granularity", granularity);
     const parm = params.toString();
-
+    setLoading(true);
     DashboardReportServices.FetchStatistics(parm)
       .then((r) => {
         console.log("analytics: ", r);
@@ -110,7 +111,8 @@ export default function TaskStatisticsPage(): JSX.Element {
       })
       .catch((e) => {
         console.log("error: ", e);
-      });
+      })
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -165,6 +167,9 @@ export default function TaskStatisticsPage(): JSX.Element {
     URL.revokeObjectURL(url);
   }
 
+  if (loading) {
+    return <SpinnerLoader />;
+  }
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">

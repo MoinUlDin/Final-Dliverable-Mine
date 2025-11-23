@@ -38,7 +38,6 @@ function TaskCard({
 }) {
   const progress = task.progress ?? 0;
   const completed = task.status === "COMPLETED";
-  const overdue = task.status === "Over_Due";
 
   const priorityColor =
     task.priority === "High"
